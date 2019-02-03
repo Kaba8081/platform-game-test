@@ -75,6 +75,7 @@ class Player(pygame.sprite.Sprite):
             self.crouching = 1
             self.image_shown = self.images[2]
             self.tick_idle = 60
+            self.index_idle = 1
         else:
             self.crouching = 0
 
