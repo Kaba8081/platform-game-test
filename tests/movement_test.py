@@ -18,10 +18,8 @@ textures_ground.append(pygame.transform.scale(pygame.image.load(path.join(path.d
 # player_idle
 for i in range(2):
     textures_player.append(pygame.transform.scale(pygame.image.load(path.join(imgDir,'player/player_idle{0}.png'.format(i+1))).convert_alpha(),(64,64)))
-
-#player_moving
-
-#player_jump
+for i in range(1):  
+    textures_player.append(pygame.transform.scale(pygame.image.load(path.join(imgDir,'player/player_crouching{0}.png'.format(i+1))).convert_alpha(),(64,64)))
 
 # Other variables
 
@@ -47,6 +45,7 @@ class Player(pygame.sprite.Sprite):
         #self.image = self.images[self.index_idle]
         self.image_shown = self.images[self.index_idle]
         self.rect = pygame.Rect(x,y,64,64)
+        self.crouching = 0
         self.speedx = 0
         self.speedy = 0    
     def update(self):
@@ -73,13 +72,17 @@ class Player(pygame.sprite.Sprite):
             if self.speedy == 0:
                 self.speedy -= 9
         if keys[pygame.K_s]:
-            pass
+            self.crouching = 1
+            self.image_shown = self.images[2]
+            self.tick_idle = 60
+        else:
+            self.crouching = 0
 
         # animations
-        if self.speedx == 0 and self.speedy == 0:
+        if self.speedx == 0 and self.speedy == 0 and self.crouching != 1:
             if self.tick_idle >= 61:
                 self.index_idle += 1
-                if self.index_idle >= len(self.images):
+                if self.index_idle >= 2:
                     self.index_idle = 0
                 self.image_shown = self.images[self.index_idle] 
                 self.tick_idle = 0 
