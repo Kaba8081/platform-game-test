@@ -20,6 +20,10 @@ for i in range(2):
     textures_player.append(pygame.transform.scale(pygame.image.load(path.join(imgDir,'player/player_idle{0}.png'.format(i+1))).convert_alpha(),(64,64)))
 for i in range(1):  
     textures_player.append(pygame.transform.scale(pygame.image.load(path.join(imgDir,'player/player_crouching{0}.png'.format(i+1))).convert_alpha(),(64,64)))
+for i in range(1):
+    textures_player.append(pygame.transform.scale(pygame.image.load(path.join(imgDir,'player/player_jumping{0}.png'.format(i+1))).convert_alpha(),(64,64)))
+for i in range(2):
+    textures_player.append(pygame.transform.scale(pygame.image.load(path.join(imgDir,'player/player_running{0}.png'.format(i+1))).convert_alpha(),(64,64)))
 
 # Other variables
 
@@ -39,11 +43,17 @@ class Player(pygame.sprite.Sprite):
     def __init__(self,textures,x,y):
         pygame.sprite.Sprite.__init__(self)
         self.images = textures
+
+        # animation configs
         self.index_idle = 0
         self.tick_idle = 0
+        self.index_jump = 3
+        self.tick_jump = 0
+        self.index_run = 4
+        self.tick_run = 0
         self.facing = 'left'
-        #self.image = self.images[self.index_idle]
         self.image_shown = self.images[self.index_idle]
+
         self.rect = pygame.Rect(x,y,64,64)
         self.crouching = 0
         self.speedx = 0
@@ -66,29 +76,56 @@ class Player(pygame.sprite.Sprite):
         else:
             if keys[pygame.K_a]:
                 self.speedx = -5
+                self.tick_idle = 59
+                self.index_idle = 1
             if keys[pygame.K_d]:
                 self.speedx = 5
+                self.tick_idle = 59
+                self.index_idle = 1
         if keys[pygame.K_w]:
             if self.speedy == 0:
                 self.speedy -= 9
+            self.image = self.images[0]
+            self.tick_idle = 59
+            self.index_idle = 1
+            self.crouching = 0
         if keys[pygame.K_s]:
             self.crouching = 1
-            self.image_shown = self.images[2]
-            self.tick_idle = 60
-            self.index_idle = 1
         else:
             self.crouching = 0
 
         # animations
+
+        if self.speedy != 0:
+            if self.tick_jump >= 30:
+                self.index_jump += 1
+                if self.index_jump > 3:
+                    self.index_jump = 3
+                self.image_shown = self.images[self.index_jump]
+                self.tick_jump = 0
+            self.tick_jump += 1
+        if self.speedx != 0 and self.speedy == 0:
+            if self.tick_run > 10:
+                self.index_run += 1
+                if self.index_run > 5:
+                    self.index_run = 4
+                self.image_shown = self.images[self.index_run]
+                self.tick_run = 0
+            self.tick_run += 1
         if self.speedx == 0 and self.speedy == 0 and self.crouching != 1:
-            if self.tick_idle >= 61:
+            if self.tick_idle >= 60:
                 self.index_idle += 1
                 if self.index_idle >= 2:
                     self.index_idle = 0
                 self.image_shown = self.images[self.index_idle] 
                 self.tick_idle = 0 
             self.tick_idle += 1
+        if self.crouching == 1 and not keys[pygame.K_w]:
+            self.image_shown = self.images[2]
+            self.tick_idle = 59
+            self.index_idle = 1
         # image update
+
         if  keys[pygame.K_d]:
             self.facing = 'right'
         elif keys[pygame.K_a]:
