@@ -201,7 +201,7 @@ while not done:
         p.rect.x -= abs(p.speedx)
         for plat in allTiles: 
             plat.rect.x -= abs(p.speedx)
-    if p.rect.left <= 180:
+    if p.rect.left <= 280:
         p.rect.x += max(abs(p.speedx), 2)
         for plat in allTiles:
             plat.rect.left += max(abs(p.speedx), 2)

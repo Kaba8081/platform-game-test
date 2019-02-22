@@ -1,0 +1,6 @@
+current_material_index:
+
+0 - dirt1
+1 - dirt2
+2 - player
+3 - enemy
