@@ -160,12 +160,16 @@ class Player(pygame.sprite.Sprite):
             self.speedy = 1
         else:
             self.speedy += gravity
-        
+
+def draw_grid():
+    pygame.draw.line(screen, (0,0,255), (200, 0), (200, 448))
+    pygame.draw.line(screen, (0,0,255), (440, 0), (440, 448))
+
 # placing sprites
 p = Player(textures_player,100,100)
 allSprites.add(p)
 
-for i in range(10):
+for i in range(50):
     for j in range(7):
         if j == 5:
             t = Tile(textures_ground[1],i*64,j*64)
@@ -176,6 +180,22 @@ for i in range(10):
             allSprites.add(t)
             allTiles.add(t)
 
+while True:
+    if p.rect.centerx > 320:
+        for sprite in allSprites:
+           sprite.rect.centerx -= 1
+    elif p.rect.centerx < 320:
+        for sprite in allSprites:
+            sprite.rect.centerx += 1
+    elif p.rect.centery > 140:
+        for sprite in allSprites:
+            sprite.rect.centery -= 1
+    elif p.rect.centery < 140:
+        for sprite in allSprites:
+            sprite.rect.centery += 1
+    else:
+        break
+
 while not done:
     # event
     for event in pygame.event.get():
@@ -185,30 +205,29 @@ while not done:
             sys.exit()
             
     # update
-    if p.rect.top <= HEIGHT /4:
-        p.rect.y += abs(p.speedy)
+
+    if p.rect.centerx > 200 and p.rect.centerx < 440:
         for platform in allTiles:
-            platform.rect.y += abs(p.speedy)
-    if p.rect.bottom >= HEIGHT - (HEIGHT /2.5):
-        p.rect.y += -abs(p.speedy)
+            platform.rect.x += -int(p.speedx / 1.7)
+    else:
         for platform in allTiles:
-            platform.rect.y += -abs(p.speedy)
-    if p.rect.right >= WIDTH / 4:
-        p.rect.x -= abs(p.speedx) 
-        for plat in allTiles: 
-            plat.rect.x -= abs(p.speedx)
-    if p.rect.right >= WIDTH / 4:
-        p.rect.x -= abs(p.speedx)
-        for plat in allTiles: 
-            plat.rect.x -= abs(p.speedx)
-    if p.rect.left <= 280:
-        p.rect.x += max(abs(p.speedx), 2)
-        for plat in allTiles:
-            plat.rect.left += max(abs(p.speedx), 2)
+            platform.rect.x += -p.speedx
+        p.rect.x += -p.speedx
+
+    for platform in allTiles:
+        platform.rect.y += -p.speedy
+
+    if p.rect.centery < 280:
+        for tile in allSprites:
+            tile.rect.y += 1
+    elif p.rect.centery > 280: 
+        for tile in allSprites:
+            tile.rect.y += -1
 
     # draw
     screen.fill(background_color)
     allSprites.update()
     allSprites.draw(screen)
+    draw_grid()
     pygame.display.flip()
     clock.tick(60)

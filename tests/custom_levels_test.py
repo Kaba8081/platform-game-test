@@ -11,7 +11,8 @@ def show_level(level):
     allSprites = pygame.sprite.Group()
     allTiles = pygame.sprite.Group()
     clock = pygame.time.Clock()
-
+    background_color = (20, 198, 229)
+    camera_speed_y = 0
     imgDir = path.join(path.join(path.dirname(__file__),'..'),'textures')
 
     textures_ground = []
@@ -53,12 +54,15 @@ def show_level(level):
             self.rect = pygame.Rect(x,y,64,64)
             self.crouching = 0
             self.speedx = 0
-            self.speedy = 0    
+            self.speedy = 0 
+            self.colliding_x = False   
         def update(self):
             # movement
 
+            self.colliding_x = False
             self.experience_gravity()
             self.gravity()
+            self.collidex()
 
             keys = pygame.key.get_pressed()
             
@@ -120,6 +124,7 @@ def show_level(level):
                 self.image_shown = self.images[2]
                 self.tick_idle = 59
                 self.index_idle = 1
+
             # image update
 
             if  keys[pygame.K_d]:
@@ -133,23 +138,35 @@ def show_level(level):
                 self.image = pygame.transform.flip(self.image_shown,True,False)
             
             # position update
+
             self.rect.x += self.speedx
             self.rect.y += self.speedy
 
         def gravity(self):
             for colliding_object in pygame.sprite.spritecollide(self, allTiles, False):
-                if self.speedy > 0:
-                    self.rect.bottom = colliding_object.rect.top+1
-                    self.speedy = 0
-                if self.speedy < 0:
-                    self.rect.top = colliding_object.rect.bottom-1
-                    self.speedy = 0
+                if abs(colliding_object.rect.x - self.rect.centerx) <= 32:
+                    if self.speedy > 0:
+                        self.rect.bottom = colliding_object.rect.top+1
+                        self.speedy = 0
+                    if self.speedy < 0:
+                        self.rect.top = colliding_object.rect.bottom-1
+                        self.speedy = 0
         
         def experience_gravity(self, gravity = .35):
             if self.speedy == 0:
                 self.speedy = 1
             else:
                 self.speedy += gravity
+        def collidex(self):
+            for colliding_object in pygame.sprite.spritecollide(self, allTiles, False):
+                if abs(colliding_object.rect.centery - self.rect.centery) <= 32:
+                    if self.speedx > 0:
+                        self.rect.right = colliding_object.rect.left-1
+                        self.speedx = 0
+                    if self.speedx < 0:
+                        self.rect.left = colliding_object.rect.right+1
+                        self.speedx = 0
+                    self.colliding_x = True
 
     for i in range(len(level)):
         for j in range(len(level[0])):
@@ -172,10 +189,10 @@ def show_level(level):
         elif p.rect.centerx < 320:
             for sprite in allSprites:
                 sprite.rect.centerx += 16
-        elif p.rect.centery > 224:
+        elif p.rect.centery > 320:
             for sprite in allSprites:
                 sprite.rect.centery -= 16
-        elif p.rect.centery < 224:
+        elif p.rect.centery < 320:
             for sprite in allSprites:
                 sprite.rect.centery += 16
         else:
@@ -186,34 +203,32 @@ def show_level(level):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 done = True
+        if not p.colliding_x:
+            if p.rect.centerx > 200 and p.rect.centerx < 440:
+                for platform in allTiles:
+                    platform.rect.x += -int(p.speedx / 1.7)
+            else:
+                for platform in allTiles:
+                    platform.rect.x += -p.speedx
+                p.rect.x += -p.speedx      
 
-        # EXPERIMETAL - REPLACE LATER
-        if p.rect.top <= HEIGHT /4:
-            p.rect.y += abs(p.speedy)
-            for platform in allTiles:
-                platform.rect.y += abs(p.speedy)
-        if p.rect.bottom >= HEIGHT - (HEIGHT /2.5):
-            p.rect.y += -abs(p.speedy)
-            for platform in allTiles:
-                platform.rect.y += -abs(p.speedy)
-        if p.rect.right >= WIDTH / 4:
-            p.rect.x -= abs(p.speedx) 
-            for plat in allTiles: 
-                plat.rect.x -= abs(p.speedx)
-        if p.rect.right >= WIDTH / 4:
-            p.rect.x -= abs(p.speedx)
-            for plat in allTiles: 
-                plat.rect.x -= abs(p.speedx)
-        if p.rect.left <= 280:
-            p.rect.x += max(abs(p.speedx), 2)
-            for plat in allTiles:
-                plat.rect.left += max(abs(p.speedx), 2)
+        for platform in allTiles:
+            platform.rect.y += -p.speedy
 
-        # /EXPERIMENTAL
-
-        screen.fill((0,0,0))
+        if p.rect.centery < 280:
+            for tile in allSprites:
+                tile.rect.y += 1
+        elif p.rect.centery > 280: 
+            for tile in allSprites:
+                tile.rect.y += -1
+        
+        screen.fill(background_color)
         allSprites.update()
         allSprites.draw(screen)
+
+        #pygame.draw.line(screen, (0,0,255), (200, 0), (200, 448))
+        #pygame.draw.line(screen, (0,0,255), (440, 0), (440, 448))
+
         pygame.display.flip()
         clock.tick(60)
 
