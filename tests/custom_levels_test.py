@@ -12,7 +12,7 @@ def show_level(level):
     allTiles = pygame.sprite.Group()
     clock = pygame.time.Clock()
     background_color = (20, 198, 229)
-    camera_speed_y = 0
+    draw_debug_bool = False
     imgDir = path.join(path.join(path.dirname(__file__),'..'),'textures')
 
     textures_ground = []
@@ -29,6 +29,19 @@ def show_level(level):
         textures_player.append(pygame.transform.scale(pygame.image.load(path.join(imgDir,'player/player_jumping{0}.png'.format(i+1))).convert_alpha(),(64,64)))
     for i in range(2):
         textures_player.append(pygame.transform.scale(pygame.image.load(path.join(imgDir,'player/player_running{0}.png'.format(i+1))).convert_alpha(),(64,64)))
+
+    def draw_debug(p):
+        p.draw_undergrid() # hitboxes of tiles under the player
+
+        pygame.draw.line(screen, (0,0,255), (200, 0), (200, 448)) # screen sticking point
+        pygame.draw.line(screen, (0,0,255), (440, 0), (440, 448))
+
+        pygame.draw.line(screen, (0,255,0), (p.rect.left, p.rect.top),(p.rect.right, p.rect.top), 2) # player hitbox
+        pygame.draw.line(screen, (0,255,0), (p.rect.left, p.rect.top),(p.rect.left, p.rect.bottom), 2)
+        pygame.draw.line(screen, (0,255,0), (p.rect.right, p.rect.bottom),(p.rect.right, p.rect.top), 2)
+        pygame.draw.line(screen, (0,255,0), (p.rect.right, p.rect.bottom),(p.rect.left, p.rect.bottom), 2)
+        pygame.draw.line(screen, (0,255,0), (p.rect.right, p.rect.bottom),(p.rect.left, p.rect.top), 1)
+        pygame.draw.line(screen, (0,255,0), (p.rect.left, p.rect.bottom),(p.rect.right, p.rect.top), 1)
 
     class Tile(pygame.sprite.Sprite):
         def __init__(self,value,x,y):
@@ -55,7 +68,8 @@ def show_level(level):
             self.crouching = 0
             self.speedx = 0
             self.speedy = 0 
-            self.colliding_x = False   
+            self.colliding_x = False  
+
         def update(self):
             # movement
 
@@ -139,17 +153,17 @@ def show_level(level):
             
             # position update
 
-            self.rect.x += self.speedx
             self.rect.y += self.speedy
+            self.rect.x += self.speedx
 
         def gravity(self):
             for colliding_object in pygame.sprite.spritecollide(self, allTiles, False):
-                if abs(colliding_object.rect.x - self.rect.centerx) <= 32:
+                if abs(colliding_object.rect.centerx - self.rect.centerx) <= 48: #and abs(colliding_object.rect.centery - self.rect.centery) <= 33:
                     if self.speedy > 0:
-                        self.rect.bottom = colliding_object.rect.top+1
+                        self.rect.bottom = colliding_object.rect.top + 1
                         self.speedy = 0
                     if self.speedy < 0:
-                        self.rect.top = colliding_object.rect.bottom-1
+                        self.rect.top = colliding_object.rect.bottom + 1
                         self.speedy = 0
         
         def experience_gravity(self, gravity = .35):
@@ -157,16 +171,30 @@ def show_level(level):
                 self.speedy = 1
             else:
                 self.speedy += gravity
+
         def collidex(self):
             for colliding_object in pygame.sprite.spritecollide(self, allTiles, False):
-                if abs(colliding_object.rect.centery - self.rect.centery) <= 32:
+                self.colliding_x = True
+                if abs(colliding_object.rect.centery - self.rect.centery) <= 16: #and abs(colliding_object.rect.centerx - self.rect.centerx) <= 16:
                     if self.speedx > 0:
-                        self.rect.right = colliding_object.rect.left-1
+                        self.rect.right = colliding_object.rect.left - 2
                         self.speedx = 0
                     if self.speedx < 0:
-                        self.rect.left = colliding_object.rect.right+1
+                        self.rect.left = colliding_object.rect.right + 2
                         self.speedx = 0
-                    self.colliding_x = True
+
+        def draw_undergrid(self):
+            for p in allTiles:
+                if abs(p.rect.centerx - self.rect.centerx) <= 48:
+                    pygame.draw.line(screen, (255,0,0), (p.rect.left, p.rect.top),(p.rect.right, p.rect.top),3)
+                    pygame.draw.line(screen, (255,0,0), (p.rect.left, p.rect.top),(p.rect.left, p.rect.bottom),3)
+                    pygame.draw.line(screen, (255,0,0), (p.rect.right, p.rect.bottom),(p.rect.right, p.rect.top),3)
+                    pygame.draw.line(screen, (255,0,0), (p.rect.right, p.rect.bottom),(p.rect.left, p.rect.bottom),3)
+                if abs(p.rect.centery - self.rect.centery) <= 48 or abs(p.rect.centery - self.rect.centery) >= -48:
+                    pygame.draw.line(screen, (255,0,0), (p.rect.left, p.rect.top),(p.rect.right, p.rect.top),3)
+                    pygame.draw.line(screen, (255,0,0), (p.rect.left, p.rect.top),(p.rect.left, p.rect.bottom),3)
+                    pygame.draw.line(screen, (255,0,0), (p.rect.right, p.rect.bottom),(p.rect.right, p.rect.top),3)
+                    pygame.draw.line(screen, (255,0,0), (p.rect.right, p.rect.bottom),(p.rect.left, p.rect.bottom),3)
 
     for i in range(len(level)):
         for j in range(len(level[0])):
@@ -203,6 +231,11 @@ def show_level(level):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 done = True
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_F12:
+                    draw_debug_bool = not draw_debug_bool
+
         if not p.colliding_x:
             if p.rect.centerx > 200 and p.rect.centerx < 440:
                 for platform in allTiles:
@@ -210,7 +243,7 @@ def show_level(level):
             else:
                 for platform in allTiles:
                     platform.rect.x += -p.speedx
-                p.rect.x += -p.speedx      
+                p.rect.x += -p.speedx   
 
         for platform in allTiles:
             platform.rect.y += -p.speedy
@@ -221,13 +254,20 @@ def show_level(level):
         elif p.rect.centery > 280: 
             for tile in allSprites:
                 tile.rect.y += -1
+
+        if p.rect.centerx < 200:
+            for tile in allSprites:
+                tile.rect.x += 5
+        elif p.rect.centerx > 440:
+            for tile in allSprites:
+                tile.rect.x -= 5
         
         screen.fill(background_color)
         allSprites.update()
         allSprites.draw(screen)
 
-        #pygame.draw.line(screen, (0,0,255), (200, 0), (200, 448))
-        #pygame.draw.line(screen, (0,0,255), (440, 0), (440, 448))
+        if draw_debug_bool:
+            draw_debug(p)
 
         pygame.display.flip()
         clock.tick(60)
