@@ -96,15 +96,20 @@ def show_level(level):
                     self.speedx = 5
                     self.tick_idle = 59
                     self.index_idle = 1
+
             if keys[pygame.K_w]:
                 if self.speedy == 0:
-                    self.speedy -= 9
+                    if self.jump():
+                        self.speedy -= 9
+                    #self.gravity()
                 self.image = self.images[0]
                 self.tick_idle = 59
                 self.index_idle = 1
                 self.crouching = 0
+
             if keys[pygame.K_s]:
                 self.crouching = 1
+
             else:
                 self.crouching = 0
 
@@ -158,14 +163,22 @@ def show_level(level):
 
         def gravity(self):
             for colliding_object in pygame.sprite.spritecollide(self, allTiles, False):
-                if abs(colliding_object.rect.centerx - self.rect.centerx) <= 48: #and abs(colliding_object.rect.centery - self.rect.centery) <= 33:
-                    if self.speedy > 0:
+                if abs(colliding_object.rect.centerx - self.rect.centerx) <= 64: #and abs(colliding_object.rect.centery - self.rect.centery) <= 33:
+                    if self.speedy > 0 and self.speedx == 0:
                         self.rect.bottom = colliding_object.rect.top + 1
                         self.speedy = 0
-                    if self.speedy < 0:
+                    elif self.speedy < 0 and self.speedx == 0:
                         self.rect.top = colliding_object.rect.bottom + 1
                         self.speedy = 0
-        
+                    else:
+                        self.speedy = 0
+
+        def jump(self):
+            for tile in allTiles:
+                if abs(self.rect.centerx - tile.rect.centerx) <= 64:
+                    if abs(self.rect.centery - tile.rect.centery) <= 32:
+                        return 0
+            return 1
         def experience_gravity(self, gravity = .35):
             if self.speedy == 0:
                 self.speedy = 1
@@ -185,12 +198,12 @@ def show_level(level):
 
         def draw_undergrid(self):
             for p in allTiles:
-                if abs(p.rect.centerx - self.rect.centerx) <= 48:
+                if abs(p.rect.centerx - self.rect.centerx) <= 64:
                     pygame.draw.line(screen, (255,0,0), (p.rect.left, p.rect.top),(p.rect.right, p.rect.top),3)
                     pygame.draw.line(screen, (255,0,0), (p.rect.left, p.rect.top),(p.rect.left, p.rect.bottom),3)
                     pygame.draw.line(screen, (255,0,0), (p.rect.right, p.rect.bottom),(p.rect.right, p.rect.top),3)
                     pygame.draw.line(screen, (255,0,0), (p.rect.right, p.rect.bottom),(p.rect.left, p.rect.bottom),3)
-                if abs(p.rect.centery - self.rect.centery) <= 48 or abs(p.rect.centery - self.rect.centery) >= -48:
+                if abs(p.rect.centery - self.rect.centery) <= 16:#48 or abs(p.rect.centery - self.rect.centery) >= -48:
                     pygame.draw.line(screen, (255,0,0), (p.rect.left, p.rect.top),(p.rect.right, p.rect.top),3)
                     pygame.draw.line(screen, (255,0,0), (p.rect.left, p.rect.top),(p.rect.left, p.rect.bottom),3)
                     pygame.draw.line(screen, (255,0,0), (p.rect.right, p.rect.bottom),(p.rect.right, p.rect.top),3)
